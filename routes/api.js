@@ -5,7 +5,7 @@ var fs = require('fs');
 var tellorGetters = require('../constants/TellorGetters.json');
 var userJSON = require('../constants/UserContract.json')
 // "Web3.providers.givenProvider" will be set if in an Ethereum supported browser.
-var web3 = new Web3(process.env.nodeURL || Web3.givenProvider);
+var web3 = new Web3('https://mainnet.infura.io/v3/d80480be7e3246e595dc81cb54c50e8f');
 var myContract = new web3.eth.Contract(tellorGetters.abi,'0x0ba45a8b5d5575935b8158a88c631e9f9c95a2e5');
 var userContract = new web3.eth.Contract(userJSON.abi,'0xCaC3937932621F62D94aCdE77bBB2a091FD26f58');
 
@@ -61,7 +61,7 @@ router.get('/info', async function(req,res){
 })
 
 //Get data for as specific price request
-router.get('/price/:requestID',async function(req,res){
+router.get('/price/:requestID', async function(req,res){
 	console.log('getting current price...', req.params.requestID);
 	var _returned = await userContract.methods.getCurrentValue(req.params.requestID).call();
 	res.send({
@@ -69,6 +69,38 @@ router.get('/price/:requestID',async function(req,res){
 		value: _returned[1],
 		timestampRetrieved: _returned[2]
 	})
+})
+
+// Get data batched price data for multiple assets
+router.get('/prices/:requestIDs', async (req, res) => {
+	const ids = req.params.requestIDs
+	// TODO: param validation
+
+	// split request ids by '&'
+	// make multiple calls
+	// save data into an array
+	// return
+
+	const splitIds = ids.split('&')
+	
+	const runCalls = () => {
+		let priceArray = []
+		for (let i = 0; i < splitIds.length; i++) {
+			userContract.methods.getCurrentValue(splitIds[i]).call()
+			.then(res => {
+				priceArray.push({splitIds[i].toString(): {
+					didGet: res[0],
+					value: res[1],
+					timestampRetrieved: res[2]
+				}})
+			})
+		}
+		return priceArray
+	}
+
+	const sendMsg = await runCalls()
+	console.log('sendMsg : ', sendMsg)
+
 })
 
 //Get data for a specific dispute

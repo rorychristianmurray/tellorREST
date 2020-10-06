@@ -1,5 +1,5 @@
 require('dotenv').config()
-const express=require('express');
+const express = require('express');
 const favicon = require('express-favicon');
 var cors = require('cors')
 
